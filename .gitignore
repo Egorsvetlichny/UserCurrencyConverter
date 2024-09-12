@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/UserCurrencyConverter/App.config
+/UserCurrencyConverter/secret.txt
+/UserCurrencyConverter/Form1.resx
+/UserCurrencyConverter/packages.config

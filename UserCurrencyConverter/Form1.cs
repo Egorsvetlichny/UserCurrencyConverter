@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -10,8 +11,8 @@ namespace UserCurrencyConverter
 {
     public partial class Form1 : Form
     {
-        private string ApiKey = SecretFileHandler.GetApiKey();
-        private const string ApiUrl = "https://v6.exchangerate-api.com/v6/{0}/latest/{1}";
+        private readonly string _apiKey = SecretFileHandler.GetApiKey();
+        private const string _apiUrl = "https://v6.exchangerate-api.com/v6/{0}/latest/{1}";
 
         private readonly Label _mainLabel;
         private readonly Label _fromCurrencyLabel;
@@ -27,6 +28,9 @@ namespace UserCurrencyConverter
         {
             this.Text = "Simple currency converter";
             this.Size = new System.Drawing.Size(500, 400);
+            this.BackColor = Color.LightGray;
+
+            this.Icon = new Icon(Path.Combine(Environment.CurrentDirectory.Replace("\\bin\\Debug", "\\media"), "icon.ico"));
 
             _mainLabel = new Label
             {
@@ -84,7 +88,8 @@ namespace UserCurrencyConverter
                 Text = "Конвертировать",
                 Size = new System.Drawing.Size(150, 30),
                 Location = new System.Drawing.Point(160, 240),
-                FlatStyle = FlatStyle.Flat
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.LightSlateGray
             };
             _convertButton.FlatAppearance.MouseOverBackColor = Color.LightGreen;
             _convertButton.FlatAppearance.MouseDownBackColor = Color.Green;
@@ -165,7 +170,7 @@ namespace UserCurrencyConverter
             using (var client = new HttpClient())
             {
                 //client.DefaultRequestHeaders.Add("apikey", ApiKey);
-                var url = string.Format(ApiUrl, ApiKey, fromCurrency);
+                var url = string.Format(_apiUrl, _apiKey, fromCurrency);
                 var response = await client.GetAsync(url);
 
                 response.EnsureSuccessStatusCode();

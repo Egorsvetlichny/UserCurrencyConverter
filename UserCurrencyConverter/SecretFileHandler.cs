@@ -3,9 +3,9 @@ using System.IO;
 
 namespace UserCurrencyConverter
 {
-    internal class SecretFileHandler
+    public class SecretFileHandler
     {
-        public static string GetApiKey()
+        public static string GetSecretData(string data)
         {
             string secretFilePath = Path.Combine(Environment.CurrentDirectory.Replace("\\bin\\Debug", ""), "secret.txt");
             if (File.Exists(secretFilePath))
@@ -18,7 +18,7 @@ namespace UserCurrencyConverter
 
                     if (parts.Length == 2)
                     {
-                        if (parts[0].Trim() == "apiKey")
+                        if (parts[0].Trim() == data)
                         {
                             return parts[1].Trim();
                         }

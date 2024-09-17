@@ -11,7 +11,7 @@ namespace UserCurrencyConverter
 {
     public partial class Form1 : Form
     {
-        private readonly string _apiKey = SecretFileHandler.GetApiKey();
+        private readonly string _apiKey = SecretFileHandler.GetSecretData("apiKey");
         private const string _apiUrl = "https://v6.exchangerate-api.com/v6/{0}/latest/{1}";
 
         private readonly Label _mainLabel;
@@ -29,7 +29,6 @@ namespace UserCurrencyConverter
             this.Text = "Simple currency converter";
             this.Size = new System.Drawing.Size(500, 400);
             this.BackColor = Color.LightGray;
-
             this.Icon = new Icon(Path.Combine(Environment.CurrentDirectory.Replace("\\bin\\Debug", "\\media"), "icon.ico"));
 
             _mainLabel = new Label
@@ -146,7 +145,10 @@ namespace UserCurrencyConverter
                     }
                     else
                     {
-                        _resultLabel.Text = $"Результат конвертации:\n{amount:N2} {fromCurrency} = {convertedAmount:N2} {toCurrency}";
+                        amount = Math.Round(amount, 2, MidpointRounding.AwayFromZero);
+                        convertedAmount = Math.Round(convertedAmount, 2, MidpointRounding.AwayFromZero);
+                        _resultLabel.Text = $"Результат конвертации:\n{amount} {fromCurrency} = {convertedAmount} {toCurrency}";
+                        DbHistoryWriter.SaveConversionHistory(fromCurrency, toCurrency, amount, convertedAmount);
                     }
                 }
 

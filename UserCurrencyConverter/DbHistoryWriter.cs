@@ -1,10 +1,13 @@
 ﻿using MySqlConnector;
+using NLog;
 using System.Windows.Forms;
 
 namespace UserCurrencyConverter
 {
     public static class DbHistoryWriter
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
+
         public static void SaveConversionHistory(string fromCurrency, string toCurrency, decimal amount, decimal convertedAmount)
         {
             string server = SecretFileHandler.GetSecretData("server");
@@ -28,11 +31,14 @@ namespace UserCurrencyConverter
                         command.Parameters.AddWithValue("@resultingSum", convertedAmount);
 
                         command.ExecuteNonQuery();
+
+                        logger.Debug("Успешная запись конвертации в БД с историей конвертаций.");
                     }
                 }
                 catch (MySqlException ex)
                 {
                     MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка при сохранении истории конвертации", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    logger.Error($"Ошибка записи данных в БД: {ex.Message}");
                 }
             }
         }

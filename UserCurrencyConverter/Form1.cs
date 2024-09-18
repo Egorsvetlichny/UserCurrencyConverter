@@ -6,11 +6,14 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
+using NLog;
 
 namespace UserCurrencyConverter
 {
     public partial class Form1 : Form
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
+
         private readonly string _apiKey = SecretFileHandler.GetSecretData("apiKey");
         private const string _apiUrl = "https://v6.exchangerate-api.com/v6/{0}/latest/{1}";
 
@@ -29,7 +32,7 @@ namespace UserCurrencyConverter
             this.Text = "Simple currency converter";
             this.Size = new System.Drawing.Size(500, 400);
             this.BackColor = Color.LightGray;
-            this.Icon = new Icon(Path.Combine(Environment.CurrentDirectory.Replace("\\bin\\Debug", "\\media"), "icon.ico"));
+            this.Icon = new Icon(Path.Combine(Directory.GetCurrentDirectory(), @"..\..\media\icon.ico"));
 
             _mainLabel = new Label
             {
@@ -111,6 +114,8 @@ namespace UserCurrencyConverter
             this.Controls.Add(_amountTextBox);
             this.Controls.Add(_convertButton);
             this.Controls.Add(_resultLabel);
+
+            logger.Debug("Форма приложения успешно создана.");
         }
 
         private async void ConvertButton_Click(object sender, EventArgs e)
@@ -126,7 +131,10 @@ namespace UserCurrencyConverter
                 if (index != -1)
                     _amountTextBox.Text = text.Substring(0, index) + "," + text.Substring(index + 1);
                 else if (text == "")
+                {
                     _resultLabel.Text = $"Сначала введите сумму конвертации!";
+                    logger.Info("Попытка конвертации без указания количества валюты.");
+                }
                 else
                 {
                     decimal amount = decimal.Parse(_amountTextBox.Text);
@@ -137,33 +145,40 @@ namespace UserCurrencyConverter
                     decimal convertedAmount = amount * exchangeRate;
                     if (amount > 1_000_000m)
                     {
-                        _resultLabel.Text = $"Вы можете конвертировать не более 1 000 000 валюты!";
+                        _resultLabel.Text = $"Вы можете конвертировать не более 1 000 000 валюты";
+                        logger.Info("Попытка конвертации более 1 000 000 валюты.");
                     }
                     else if (amount < 0m)
                     {
-                        _resultLabel.Text = $"Количество валюты должно быть положительным числом!";
+                        _resultLabel.Text = $"Количество валюты должно быть положительным числом";
+                        logger.Info("Попытка конвертации отрицательного числа валюты.");
                     }
                     else
                     {
                         amount = Math.Round(amount, 2, MidpointRounding.AwayFromZero);
                         convertedAmount = Math.Round(convertedAmount, 2, MidpointRounding.AwayFromZero);
                         _resultLabel.Text = $"Результат конвертации:\n{amount} {fromCurrency} = {convertedAmount} {toCurrency}";
+                        logger.Info($"{amount} {fromCurrency} успешно сконвертированы в {convertedAmount} {toCurrency}.");
+
                         DbHistoryWriter.SaveConversionHistory(fromCurrency, toCurrency, amount, convertedAmount);
                     }
                 }
 
             }
-            catch (HttpRequestException)
+            catch (HttpRequestException ex)
             {
                 MessageBox.Show($"Ошибка при обращении к сервису ExchangeRate.\nПроверьте корректность исходной валюты", "Ошибка конвертации", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                logger.Error($"Ошибка при обращении к внешнему api: {ex.Message}");
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
                 MessageBox.Show($"Ошибка: Целевая валюта указана неверно", "Ошибка конвертации", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                logger.Error($"Указанная целевая валюта не найдена. Ошибка: {ex.Message}");
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка конвертации", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                logger.Error($"Ошибка при конвертации валюты: {ex.Message}");
             }
         }
 
